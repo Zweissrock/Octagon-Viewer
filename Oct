@@ -1,0 +1,85 @@
+import tkinter as tk
+from tkinter import messagebox
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+
+class OctagonApp:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("Octagon Drawer")
+
+        #scaling
+        self.root.geometry("500x700")
+        self.root.resizable(False, False)  
+
+        #starting points
+        self.default_points = [(0, 1), (.7, .7), (1, 0), (.7, -.7), 
+                               (0, -1), (-.7, -.7), (-1, 0), (-.7, .7)]
+        
+        self.points = list(self.default_points)
+        
+        # Create entry widgets for points with default values
+        self.entries = []
+        for i, (x, y) in enumerate(self.default_points):
+            row = tk.Frame(root)
+            row.pack()
+            tk.Label(row, text=f"Point {i+1} (x y):").pack(side=tk.LEFT)
+            entry = tk.Entry(row, width=20)
+            entry.insert(tk.END, f"{x} {y}")
+            entry.pack(side=tk.LEFT)
+            self.entries.append(entry)
+        
+        # Create submit button
+        submit_button = tk.Button(root, text="Update Octagon", command=self.update_octagon)
+        submit_button.pack()
+
+        # Create a matplotlib figure and axis
+        self.fig, self.ax = plt.subplots()
+        self.canvas = FigureCanvasTkAgg(self.fig, master=root)
+        self.canvas_widget = self.canvas.get_tk_widget()
+        self.canvas_widget.pack(fill=tk.BOTH, expand=True)
+        
+        # Initial drawing
+        self.draw_octagon()
+
+    def update_octagon(self):
+        try:
+            # Read points from entries
+            self.points = []
+            for entry in self.entries:
+                text = entry.get()
+                x, y = map(float, text.split())
+                self.points.append((x, y))
+            
+            if len(self.points) != 8:
+                raise ValueError("Please enter exactly 8 points.")
+
+            self.draw_octagon()
+        except ValueError as e:
+            messagebox.showerror("Input Error", f"Invalid input: {e}")
+
+    def draw_octagon(self):
+        self.ax.clear()
+        
+        if len(self.points) == 8:
+            x, y = zip(*self.points)
+            x += (x[0],)  # Close the loop
+            y += (y[0],)
+
+            # Plot the octagon
+            self.ax.plot(x, y, 'o-', markersize=8, linewidth=2)
+            self.ax.fill(x, y, alpha=0.3)
+
+            # Set labels and title
+            self.ax.set_xlabel('X')
+            self.ax.set_ylabel('Y')
+            self.ax.set_title('Octagon Plot')
+
+
+        # Refresh the canvas
+        self.canvas.draw()
+
+# Create the main application window
+root = tk.Tk()
+app = OctagonApp(root)
+root.mainloop()
